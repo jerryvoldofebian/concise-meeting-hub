@@ -58,3 +58,24 @@ export interface AppSettings {
   emailNotifications: boolean;
   updatedAt: string;
 }
+
+export interface Team {
+  id: string;
+  name: string;
+  description: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+  members_count?: number;
+  is_member?: boolean;
+  is_admin?: boolean;
+}
+
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  user_id: string;
+  is_admin: boolean;
+  joined_at: string;
+  teams?: Team;
+}

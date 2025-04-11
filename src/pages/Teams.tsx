@@ -30,17 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-interface Team {
-  id: string;
-  name: string;
-  description: string | null;
-  created_by: string;
-  created_at: string;
-  members_count?: number;
-  is_member?: boolean;
-  is_admin?: boolean;
-}
+import { Team, TeamMember } from "@/types";
 
 export default function Teams() {
   const [activeTab, setActiveTab] = useState("my-teams");
@@ -79,7 +69,8 @@ export default function Teams() {
             name,
             description,
             created_by,
-            created_at
+            created_at,
+            updated_at
           )
         `)
         .eq('user_id', user.id);
@@ -87,10 +78,15 @@ export default function Teams() {
       if (memberError) throw memberError;
 
       // Format my teams
-      const formattedMyTeams = memberTeamsData
+      const formattedMyTeams: Team[] = memberTeamsData
         .filter(item => item.teams) // Ensure teams data exists
         .map(item => ({
-          ...item.teams,
+          id: item.teams.id,
+          name: item.teams.name,
+          description: item.teams.description,
+          created_by: item.teams.created_by,
+          created_at: item.teams.created_at,
+          updated_at: item.teams.updated_at,
           is_member: true,
           is_admin: item.is_admin
         }));
@@ -105,7 +101,8 @@ export default function Teams() {
           name,
           description,
           created_by,
-          created_at
+          created_at,
+          updated_at
         `);
 
       if (allTeamsError) throw allTeamsError;
@@ -126,12 +123,17 @@ export default function Teams() {
       );
 
       // Format all teams with member counts and member status
-      const formattedAllTeams = allTeamsData.map(team => {
+      const formattedAllTeams: Team[] = allTeamsData.map(team => {
         const memberCount = teamMemberCounts.find(t => t.teamId === team.id)?.count || 0;
         const isMember = formattedMyTeams.some(t => t.id === team.id);
         
         return {
-          ...team,
+          id: team.id,
+          name: team.name,
+          description: team.description,
+          created_by: team.created_by,
+          created_at: team.created_at,
+          updated_at: team.updated_at,
           members_count: memberCount,
           is_member: isMember
         };
