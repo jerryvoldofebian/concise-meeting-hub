@@ -16,7 +16,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
@@ -25,17 +25,26 @@ import {
   Edit,
   MapPin,
   MoreHorizontal,
+  Plus,
   Share2,
   Users,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Meeting, Task } from "@/types";
+import MinutesEditor from "@/components/meeting/MinutesEditor";
+import TaskForm from "@/components/meeting/TaskForm";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MeetingDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditingMinutes, setIsEditingMinutes] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [activeTab, setActiveTab] = useState("minutes");
 
   useEffect(() => {
     // Simulate API fetch for meeting details
@@ -114,6 +123,46 @@ export default function MeetingDetail() {
       day: 'numeric',
     };
     return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
+  const handleSaveMinutes = (minutes: string) => {
+    if (meeting) {
+      // Here you would normally update the meeting minutes in the database
+      const updatedMeeting = { ...meeting, minutes };
+      setMeeting(updatedMeeting);
+      setIsEditingMinutes(false);
+      
+      toast({
+        title: "Minutes saved",
+        description: "Meeting minutes have been updated successfully.",
+      });
+    }
+  };
+
+  const handleSaveTask = (task: Partial<Task>) => {
+    // Here you would normally save the task to the database
+    const newTask = {
+      id: `task-${Date.now()}`,
+      title: task.title || "",
+      description: task.description,
+      assigneeId: task.assigneeId || "user1",
+      meetingId: meeting?.id || "",
+      dueDate: task.dueDate,
+      status: task.status || "pending",
+      priority: task.priority || "medium",
+      createdBy: "user1",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as Task;
+    
+    setTasks([...tasks, newTask]);
+    setIsAddingTask(false);
+    setActiveTab("tasks");
+    
+    toast({
+      title: "Task created",
+      description: "New task has been added successfully.",
+    });
   };
 
   if (loading) {
@@ -274,7 +323,7 @@ export default function MeetingDetail() {
                     </CardContent>
                   </Card>
 
-                  <Tabs defaultValue="minutes" className="w-full">
+                  <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="minutes">Minutes</TabsTrigger>
                       <TabsTrigger value="tasks">Tasks ({tasks.length})</TabsTrigger>
@@ -283,27 +332,37 @@ export default function MeetingDetail() {
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                           <CardTitle>Meeting Minutes</CardTitle>
-                          <Button variant="outline" size="sm">
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Minutes
-                          </Button>
+                          {!isEditingMinutes && (
+                            <Button variant="outline" size="sm" onClick={() => setIsEditingMinutes(true)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Minutes
+                            </Button>
+                          )}
                         </CardHeader>
                         <CardContent>
-                          <div className="prose max-w-none">
-                            {meeting.minutes ? (
-                              <div className="whitespace-pre-wrap">
-                                {meeting.minutes}
-                              </div>
-                            ) : (
-                              <div className="text-center py-8">
-                                <p className="text-muted-foreground">No meeting minutes have been recorded yet.</p>
-                                <Button variant="link" className="mt-2">
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Add Minutes
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                          {isEditingMinutes ? (
+                            <MinutesEditor 
+                              minutes={meeting.minutes || ""}
+                              onSave={handleSaveMinutes}
+                              onCancel={() => setIsEditingMinutes(false)}
+                            />
+                          ) : (
+                            <div className="prose max-w-none">
+                              {meeting.minutes ? (
+                                <div className="whitespace-pre-wrap">
+                                  {meeting.minutes}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8">
+                                  <p className="text-muted-foreground">No meeting minutes have been recorded yet.</p>
+                                  <Button variant="link" className="mt-2" onClick={() => setIsEditingMinutes(true)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Add Minutes
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     </TabsContent>
@@ -311,58 +370,70 @@ export default function MeetingDetail() {
                       <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                           <CardTitle>Assigned Tasks</CardTitle>
-                          <Button variant="outline" size="sm">
-                            <Edit className="mr-2 h-4 w-4" />
-                            Add Task
-                          </Button>
+                          {!isAddingTask && (
+                            <Button variant="outline" size="sm" onClick={() => setIsAddingTask(true)}>
+                              <Plus className="mr-2 h-4 w-4" />
+                              Add Task
+                            </Button>
+                          )}
                         </CardHeader>
                         <CardContent>
-                          {tasks.length > 0 ? (
-                            <div className="space-y-4">
-                              {tasks.map((task, index) => (
-                                <div key={task.id} className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0">
-                                  <div className="flex items-start gap-3">
-                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full 
-                                      ${task.priority === 'high' ? 'bg-red-100 text-red-600' : 
-                                        task.priority === 'medium' ? 'bg-amber-100 text-amber-600' : 
-                                        'bg-green-100 text-green-600'}`}>
-                                      <span className="text-xs font-bold">{index + 1}</span>
-                                    </div>
-                                    <div>
-                                      <p className="font-medium">{task.title}</p>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <div className="flex items-center gap-1">
-                                          <Avatar className="h-5 w-5">
-                                            <AvatarFallback className="text-xs">
-                                              {task.assigneeId.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                          <span className="text-xs text-muted-foreground">User {task.assigneeId.slice(-1)}</span>
+                          {isAddingTask ? (
+                            <TaskForm 
+                              meetingId={meeting.id}
+                              onSave={handleSaveTask}
+                              onCancel={() => setIsAddingTask(false)}
+                            />
+                          ) : (
+                            <>
+                              {tasks.length > 0 ? (
+                                <div className="space-y-4">
+                                  {tasks.map((task, index) => (
+                                    <div key={task.id} className="flex items-start justify-between border-b pb-4 last:border-0 last:pb-0">
+                                      <div className="flex items-start gap-3">
+                                        <div className={`flex h-8 w-8 items-center justify-center rounded-full 
+                                          ${task.priority === 'high' ? 'bg-red-100 text-red-600' : 
+                                            task.priority === 'medium' ? 'bg-amber-100 text-amber-600' : 
+                                            'bg-green-100 text-green-600'}`}>
+                                          <span className="text-xs font-bold">{index + 1}</span>
                                         </div>
-                                        <Separator orientation="vertical" className="h-3" />
-                                        <span className="text-xs text-muted-foreground">Due {new Date(task.dueDate || "").toLocaleDateString()}</span>
+                                        <div>
+                                          <p className="font-medium">{task.title}</p>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <div className="flex items-center gap-1">
+                                              <Avatar className="h-5 w-5">
+                                                <AvatarFallback className="text-xs">
+                                                  {task.assigneeId.charAt(0).toUpperCase()}
+                                                </AvatarFallback>
+                                              </Avatar>
+                                              <span className="text-xs text-muted-foreground">User {task.assigneeId.slice(-1)}</span>
+                                            </div>
+                                            <Separator orientation="vertical" className="h-3" />
+                                            <span className="text-xs text-muted-foreground">Due {new Date(task.dueDate || "").toLocaleDateString()}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <div className={`rounded-full px-2 py-1 text-xs font-medium
+                                          ${task.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                            task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
+                                            'bg-green-100 text-green-800'}`}>
+                                          {task.status === 'pending' ? 'Pending' : 
+                                            task.status === 'in-progress' ? 'In Progress' : 'Completed'}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <div className={`rounded-full px-2 py-1 text-xs font-medium
-                                      ${task.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                        task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
-                                        'bg-green-100 text-green-800'}`}>
-                                      {task.status === 'pending' ? 'Pending' : 
-                                        task.status === 'in-progress' ? 'In Progress' : 'Completed'}
-                                    </div>
-                                  </div>
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-center py-8">
-                              <p className="text-muted-foreground">No tasks have been assigned for this meeting.</p>
-                              <Button variant="link" className="mt-2">
-                                Add Task
-                              </Button>
-                            </div>
+                              ) : (
+                                <div className="text-center py-8">
+                                  <p className="text-muted-foreground">No tasks have been assigned for this meeting.</p>
+                                  <Button variant="link" className="mt-2" onClick={() => setIsAddingTask(true)}>
+                                    Add Task
+                                  </Button>
+                                </div>
+                              )}
+                            </>
                           )}
                         </CardContent>
                       </Card>

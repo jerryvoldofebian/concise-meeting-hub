@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppNavbar } from "@/components/layout/AppNavbar";
@@ -34,12 +33,14 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Task } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Tasks() {
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   
-  const [tasks] = useState<Task[]>([
+  const [tasks, setTasks] = useState<Task[]>([
     {
       id: "1",
       title: "Update product roadmap document",
@@ -131,11 +132,37 @@ export default function Tasks() {
   const filteredTasks = filterTasks();
 
   const handleStatusChange = (taskId: string, newStatus: "pending" | "in-progress" | "completed") => {
-    // Here you would normally update the task status in the database
     setIsLoading(true);
     
     setTimeout(() => {
+      const updatedTasks = tasks.map(task => 
+        task.id === taskId 
+          ? { ...task, status: newStatus, updatedAt: new Date().toISOString() }
+          : task
+      );
+      
+      setTasks(updatedTasks);
       setIsLoading(false);
+      
+      toast({
+        title: "Task updated",
+        description: `Task status has been changed to ${newStatus.replace('-', ' ')}.`,
+      });
+    }, 500);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      const updatedTasks = tasks.filter(task => task.id !== taskId);
+      setTasks(updatedTasks);
+      setIsLoading(false);
+      
+      toast({
+        title: "Task deleted",
+        description: "The task has been deleted successfully.",
+      });
     }, 500);
   };
 
@@ -229,7 +256,10 @@ export default function Tasks() {
                                     Mark as pending
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem className="text-red-600">
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onClick={() => handleDeleteTask(task.id)}
+                                  >
                                     Delete task
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>

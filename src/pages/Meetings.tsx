@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppNavbar } from "@/components/layout/AppNavbar";
@@ -305,15 +304,393 @@ export default function Meetings() {
                   </TabsContent>
                   
                   <TabsContent value="upcoming" className="space-y-4">
-                    {/* Same table structure for upcoming meetings */}
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[250px]">Meeting</TableHead>
+                            <TableHead>Date & Time</TableHead>
+                            <TableHead>Attendees</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filterMeetings().map((meeting) => (
+                            <TableRow key={meeting.id}>
+                              <TableCell>
+                                <div className="font-medium">{meeting.title}</div>
+                                <div className="text-sm text-muted-foreground truncate max-w-[250px]">
+                                  {meeting.description}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  <span>
+                                    {formatDate(meeting.date)} · {meeting.startTime} - {meeting.endTime}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {meeting.location}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <div className="flex -space-x-2 mr-2">
+                                    {Array(Math.min(3, meeting.attendees?.length || 0)).fill(0).map((_, i) => (
+                                      <Avatar key={i} className="h-6 w-6 border-2 border-background">
+                                        <AvatarFallback className="text-xs">
+                                          {String.fromCharCode(65 + i)}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    ))}
+                                  </div>
+                                  {(meeting.attendees?.length || 0) > 3 && (
+                                    <span className="text-xs text-muted-foreground">
+                                      +{(meeting.attendees?.length || 0) - 3} more
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(meeting.date) < new Date() ? (
+                                  <Badge variant="outline" className="bg-muted">Completed</Badge>
+                                ) : (
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Upcoming</Badge>
+                                )}
+                                {meeting.isRecurring && (
+                                  <Badge variant="outline" className="ml-2 border-blue-200 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                                    Recurring
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Actions</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem>
+                                      <Link to={`/meetings/${meeting.id}`} className="flex w-full">
+                                        View details
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Link to={`/meetings/${meeting.id}/edit`} className="flex w-full">
+                                        Edit meeting
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                      <div className="flex items-center gap-2">
+                                        <Share2 className="h-4 w-4" />
+                                        <span>Share minutes</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <div className="flex items-center gap-2">
+                                        <Download className="h-4 w-4" />
+                                        <span>Export to PDF</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-red-600">
+                                      Cancel meeting
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {filterMeetings().length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8">
+                                <div className="flex flex-col items-center justify-center text-center">
+                                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                                    <Calendar className="h-10 w-10 text-muted-foreground" />
+                                  </div>
+                                  <h3 className="mt-4 text-lg font-semibold">No meetings found</h3>
+                                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                                    You don't have any meetings in this category.
+                                  </p>
+                                  <Link to="/meetings/new">
+                                    <Button className="bg-brand-600 hover:bg-brand-700">
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      Schedule a Meeting
+                                    </Button>
+                                  </Link>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="past" className="space-y-4">
-                    {/* Same table structure for past meetings */}
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[250px]">Meeting</TableHead>
+                            <TableHead>Date & Time</TableHead>
+                            <TableHead>Attendees</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filterMeetings().map((meeting) => (
+                            <TableRow key={meeting.id}>
+                              <TableCell>
+                                <div className="font-medium">{meeting.title}</div>
+                                <div className="text-sm text-muted-foreground truncate max-w-[250px]">
+                                  {meeting.description}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  <span>
+                                    {formatDate(meeting.date)} · {meeting.startTime} - {meeting.endTime}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {meeting.location}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <div className="flex -space-x-2 mr-2">
+                                    {Array(Math.min(3, meeting.attendees?.length || 0)).fill(0).map((_, i) => (
+                                      <Avatar key={i} className="h-6 w-6 border-2 border-background">
+                                        <AvatarFallback className="text-xs">
+                                          {String.fromCharCode(65 + i)}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    ))}
+                                  </div>
+                                  {(meeting.attendees?.length || 0) > 3 && (
+                                    <span className="text-xs text-muted-foreground">
+                                      +{(meeting.attendees?.length || 0) - 3} more
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(meeting.date) < new Date() ? (
+                                  <Badge variant="outline" className="bg-muted">Completed</Badge>
+                                ) : (
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Upcoming</Badge>
+                                )}
+                                {meeting.isRecurring && (
+                                  <Badge variant="outline" className="ml-2 border-blue-200 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                                    Recurring
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Actions</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem>
+                                      <Link to={`/meetings/${meeting.id}`} className="flex w-full">
+                                        View details
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Link to={`/meetings/${meeting.id}/edit`} className="flex w-full">
+                                        Edit meeting
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                      <div className="flex items-center gap-2">
+                                        <Share2 className="h-4 w-4" />
+                                        <span>Share minutes</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <div className="flex items-center gap-2">
+                                        <Download className="h-4 w-4" />
+                                        <span>Export to PDF</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-red-600">
+                                      Cancel meeting
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {filterMeetings().length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8">
+                                <div className="flex flex-col items-center justify-center text-center">
+                                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                                    <Calendar className="h-10 w-10 text-muted-foreground" />
+                                  </div>
+                                  <h3 className="mt-4 text-lg font-semibold">No meetings found</h3>
+                                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                                    You don't have any meetings in this category.
+                                  </p>
+                                  <Link to="/meetings/new">
+                                    <Button className="bg-brand-600 hover:bg-brand-700">
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      Schedule a Meeting
+                                    </Button>
+                                  </Link>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="recurring" className="space-y-4">
-                    {/* Same table structure for recurring meetings */}
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[250px]">Meeting</TableHead>
+                            <TableHead>Date & Time</TableHead>
+                            <TableHead>Attendees</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filterMeetings().map((meeting) => (
+                            <TableRow key={meeting.id}>
+                              <TableCell>
+                                <div className="font-medium">{meeting.title}</div>
+                                <div className="text-sm text-muted-foreground truncate max-w-[250px]">
+                                  {meeting.description}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  <span>
+                                    {formatDate(meeting.date)} · {meeting.startTime} - {meeting.endTime}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {meeting.location}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <div className="flex -space-x-2 mr-2">
+                                    {Array(Math.min(3, meeting.attendees?.length || 0)).fill(0).map((_, i) => (
+                                      <Avatar key={i} className="h-6 w-6 border-2 border-background">
+                                        <AvatarFallback className="text-xs">
+                                          {String.fromCharCode(65 + i)}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    ))}
+                                  </div>
+                                  {(meeting.attendees?.length || 0) > 3 && (
+                                    <span className="text-xs text-muted-foreground">
+                                      +{(meeting.attendees?.length || 0) - 3} more
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(meeting.date) < new Date() ? (
+                                  <Badge variant="outline" className="bg-muted">Completed</Badge>
+                                ) : (
+                                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Upcoming</Badge>
+                                )}
+                                {meeting.isRecurring && (
+                                  <Badge variant="outline" className="ml-2 border-blue-200 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                                    Recurring
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Actions</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem>
+                                      <Link to={`/meetings/${meeting.id}`} className="flex w-full">
+                                        View details
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <Link to={`/meetings/${meeting.id}/edit`} className="flex w-full">
+                                        Edit meeting
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem>
+                                      <div className="flex items-center gap-2">
+                                        <Share2 className="h-4 w-4" />
+                                        <span>Share minutes</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                      <div className="flex items-center gap-2">
+                                        <Download className="h-4 w-4" />
+                                        <span>Export to PDF</span>
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-red-600">
+                                      Cancel meeting
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {filterMeetings().length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8">
+                                <div className="flex flex-col items-center justify-center text-center">
+                                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                                    <Calendar className="h-10 w-10 text-muted-foreground" />
+                                  </div>
+                                  <h3 className="mt-4 text-lg font-semibold">No meetings found</h3>
+                                  <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                                    You don't have any meetings in this category.
+                                  </p>
+                                  <Link to="/meetings/new">
+                                    <Button className="bg-brand-600 hover:bg-brand-700">
+                                      <Plus className="mr-2 h-4 w-4" />
+                                      Schedule a Meeting
+                                    </Button>
+                                  </Link>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
