@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
@@ -13,11 +13,12 @@ export default function Login() {
   const { signIn, isLoading, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  // Effect to handle redirection when auth state changes
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

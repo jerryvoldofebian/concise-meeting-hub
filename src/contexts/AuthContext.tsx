@@ -71,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       
       setState({ user, supabaseUser, isLoading: false, error: null });
+      console.log("User authenticated:", user);
     } catch (error) {
       console.error('Error fetching user:', error);
       setState(prev => ({ ...prev, error: error as Error, isLoading: false }));
@@ -172,9 +173,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    console.log("Auth provider initialized");
     getUser();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session");
       getUser();
     });
     
