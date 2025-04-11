@@ -54,13 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       
+      // Ensure the role is one of the accepted types
+      const userRole = profile.role as string;
+      const validRole: 'admin' | 'user' | 'guest' = 
+        userRole === 'admin' ? 'admin' :
+        userRole === 'guest' ? 'guest' : 'user'; // Default to 'user' if not matching
+      
       const user: User = {
         id: profile.id,
         email: supabaseUser.email || '',
         firstName: profile.first_name,
         lastName: profile.last_name,
         avatar: profile.avatar,
-        role: profile.role,
+        role: validRole,
         createdAt: profile.created_at,
       };
       
