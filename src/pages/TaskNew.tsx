@@ -8,16 +8,61 @@ import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import TaskForm from "@/components/meeting/TaskForm";
 import { Task } from "@/types";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TaskNew() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
-  const handleSaveTask = (task: Partial<Task>) => {
-    // Here you would normally save the task to the database
-    console.log("Task data:", task);
+  const handleSaveTask = async (task: Partial<Task>) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You need to be signed in to create tasks.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
     
-    // Redirect to tasks list
-    navigate("/tasks");
+    try {
+      // Format the task for Supabase (snake_case)
+      const { data, error } = await supabase.from('tasks').insert({
+        title: task.title,
+        description: task.description,
+        assignee_id: task.assigneeId,
+        meeting_id: task.meetingId,
+        due_date: task.dueDate,
+        status: task.status || 'pending',
+        priority: task.priority || 'medium',
+        created_by: user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Task created",
+        description: "Your task has been created successfully."
+      });
+      
+      // Redirect to tasks list
+      navigate("/tasks");
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast({
+        title: "Error creating task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -45,6 +90,7 @@ export default function TaskNew() {
                   <TaskForm 
                     onSave={handleSaveTask}
                     onCancel={() => navigate("/tasks")}
+                    isSubmitting={isSubmitting}
                   />
                 </CardContent>
               </Card>

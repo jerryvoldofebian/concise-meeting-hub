@@ -12,15 +12,17 @@ import {
 } from "@/components/ui/select";
 import { Task, User } from "@/types";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TaskFormProps {
   task?: Task;
   meetingId?: string;
   onSave: (task: Partial<Task>) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskFormProps) {
+export default function TaskForm({ task, meetingId, onSave, onCancel, isSubmitting = false }: TaskFormProps) {
   const [formData, setFormData] = useState<Partial<Task>>({
     title: "",
     description: "",
@@ -31,12 +33,38 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
     priority: "medium",
   });
 
-  // Mock users for the assignee dropdown
-  const [users] = useState<Partial<User>[]>([
-    { id: "user1", firstName: "John", lastName: "Doe" },
-    { id: "user2", firstName: "Jane", lastName: "Smith" },
-    { id: "user3", firstName: "Mike", lastName: "Johnson" },
-  ]);
+  const [users, setUsers] = useState<Partial<User>[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch users from Supabase
+    const fetchUsers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name');
+        
+        if (error) throw error;
+        setUsers(data.map(user => ({
+          id: user.id,
+          firstName: user.first_name,
+          lastName: user.last_name
+        })));
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        // Fallback to mock data if there's an error
+        setUsers([
+          { id: "user1", firstName: "John", lastName: "Doe" },
+          { id: "user2", firstName: "Jane", lastName: "Smith" },
+          { id: "user3", firstName: "Mike", lastName: "Johnson" },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     if (task) {
@@ -84,6 +112,7 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
           value={formData.title}
           onChange={handleInputChange}
           required
+          disabled={isSubmitting}
         />
       </div>
       
@@ -96,6 +125,7 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
           value={formData.description || ""}
           onChange={handleInputChange}
           rows={3}
+          disabled={isSubmitting}
         />
       </div>
       
@@ -106,9 +136,10 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
             name="assigneeId" 
             value={formData.assigneeId} 
             onValueChange={(value) => handleSelectChange("assigneeId", value)}
+            disabled={isSubmitting || loading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select assignee" />
+              <SelectValue placeholder={loading ? "Loading users..." : "Select assignee"} />
             </SelectTrigger>
             <SelectContent>
               {users.map(user => (
@@ -128,6 +159,7 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
             type="date" 
             value={formData.dueDate}
             onChange={handleInputChange}
+            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -139,6 +171,7 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
             name="priority" 
             value={formData.priority} 
             onValueChange={(value) => handleSelectChange("priority", value as "low" | "medium" | "high")}
+            disabled={isSubmitting}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select priority" />
@@ -157,6 +190,7 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
             name="status" 
             value={formData.status} 
             onValueChange={(value) => handleSelectChange("status", value as "pending" | "in-progress" | "completed" | "cancelled")}
+            disabled={isSubmitting}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
@@ -172,11 +206,11 @@ export default function TaskForm({ task, meetingId, onSave, onCancel }: TaskForm
       </div>
       
       <div className="flex justify-end gap-4 pt-4">
-        <Button variant="outline" type="button" onClick={onCancel}>
+        <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit" className="bg-brand-600 hover:bg-brand-700">
-          {task ? "Update Task" : "Create Task"}
+        <Button type="submit" className="bg-brand-600 hover:bg-brand-700" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : (task ? "Update Task" : "Create Task")}
         </Button>
       </div>
     </form>
