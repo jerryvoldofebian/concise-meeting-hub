@@ -43,7 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
         
       if (profileError) {
-        throw profileError;
+        console.error('Error fetching user profile:', profileError);
+        setState(prev => ({ ...prev, isLoading: false }));
+        return;
+      }
+      
+      if (!profile) {
+        console.error('No profile found for user');
+        setState(prev => ({ ...prev, isLoading: false }));
+        return;
       }
       
       const user: User = {
