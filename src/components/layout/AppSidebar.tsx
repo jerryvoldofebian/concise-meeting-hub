@@ -20,6 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -58,12 +59,10 @@ export function AppSidebar() {
         <Link to="/dashboard" className="flex items-center gap-2 px-4">
           <span className="font-semibold text-xl text-brand-600">MeetingMinutes</span>
         </Link>
-        <SidebarHeader.Action asChild>
-          <button className="h-6 w-6 rounded-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
-            <ChevronsLeft className="h-4 w-4" />
-            <span className="sr-only">Collapse</span>
-          </button>
-        </SidebarHeader.Action>
+        <button className="h-6 w-6 rounded-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 absolute right-2 top-3">
+          <ChevronsLeft className="h-4 w-4" />
+          <span className="sr-only">Collapse</span>
+        </button>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -71,7 +70,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild active={location.pathname === item.path}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.path}>
                     <Link to={item.path}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -100,5 +99,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
