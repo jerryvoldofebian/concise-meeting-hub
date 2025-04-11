@@ -8,17 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Calendar, Clock, MapPin, Users } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { Meeting } from "@/types";
 
-export default function MeetingNew() {
+export default function MeetingEdit() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -29,6 +30,46 @@ export default function MeetingNew() {
     isRecurring: false,
     recurringPattern: ""
   });
+
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchMeeting = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('meetings')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) throw error;
+        
+        setFormData({
+          title: data.title,
+          description: data.description || "",
+          date: data.date,
+          startTime: data.start_time,
+          endTime: data.end_time,
+          location: data.location || "",
+          isRecurring: data.is_recurring,
+          recurringPattern: data.recurring_pattern || ""
+        });
+      } catch (error) {
+        console.error("Error fetching meeting:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load meeting details. Please try again.",
+          variant: "destructive",
+        });
+        navigate('/meetings');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMeeting();
+  }, [id, navigate, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target as HTMLInputElement;
@@ -42,22 +83,14 @@ export default function MeetingNew() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "You need to be logged in to create a meeting.",
-        variant: "destructive"
-      });
-      return;
-    }
+    if (!id) return;
     
     setIsSubmitting(true);
     
     try {
-      // Insert meeting into Supabase
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('meetings')
-        .insert({
+        .update({
           title: formData.title,
           description: formData.description || null,
           date: formData.date,
@@ -66,31 +99,47 @@ export default function MeetingNew() {
           location: formData.location || null,
           is_recurring: formData.isRecurring,
           recurring_pattern: formData.isRecurring ? formData.recurringPattern || 'weekly' : null,
-          created_by: user.id
+          updated_at: new Date().toISOString()
         })
-        .select()
-        .single();
+        .eq('id', id);
       
       if (error) throw error;
       
       toast({
-        title: "Meeting created",
-        description: "Your meeting has been created successfully.",
+        title: "Meeting updated",
+        description: "Your meeting has been updated successfully.",
       });
       
-      // Redirect to meeting details page
-      navigate(`/meetings/${data.id}`);
+      navigate(`/meetings/${id}`);
     } catch (error) {
-      console.error("Error creating meeting:", error);
+      console.error("Error updating meeting:", error);
       toast({
         title: "Error",
-        description: "Failed to create meeting. Please try again.",
+        description: "Failed to update meeting. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="flex h-screen w-full">
+          <AppSidebar />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <AppNavbar />
+            <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-pulse">Loading meeting details...</div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -101,12 +150,12 @@ export default function MeetingNew() {
           <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
             <div className="mx-auto max-w-3xl">
               <div className="flex items-center gap-2 mb-6">
-                <Link to="/meetings">
+                <Link to={`/meetings/${id}`}>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>
-                <h1 className="text-2xl font-bold tracking-tight">New Meeting</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Edit Meeting</h1>
               </div>
 
               <form onSubmit={handleSubmit}>
@@ -249,13 +298,13 @@ export default function MeetingNew() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      You can add attendees after creating the meeting.
+                      You can manage attendees after updating the meeting.
                     </p>
                   </CardContent>
                 </Card>
                 
                 <div className="flex justify-end gap-4">
-                  <Link to="/meetings">
+                  <Link to={`/meetings/${id}`}>
                     <Button variant="outline" type="button" disabled={isSubmitting}>Cancel</Button>
                   </Link>
                   <Button 
@@ -263,7 +312,7 @@ export default function MeetingNew() {
                     className="bg-brand-600 hover:bg-brand-700"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Creating..." : "Create Meeting"}
+                    {isSubmitting ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </form>

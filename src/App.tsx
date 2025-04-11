@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Meetings from "./pages/Meetings";
 import MeetingDetail from "./pages/MeetingDetail";
 import MeetingNew from "./pages/MeetingNew";
+import MeetingEdit from "./pages/MeetingEdit";
 import Tasks from "./pages/Tasks";
 import TaskNew from "./pages/TaskNew";
 import Teams from "./pages/Teams";
@@ -64,6 +65,11 @@ const App = () => (
             <Route path="/meetings/:id" element={
               <ProtectedRoute>
                 <MeetingDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/meetings/:id/edit" element={
+              <ProtectedRoute>
+                <MeetingEdit />
               </ProtectedRoute>
             } />
             <Route path="/tasks" element={
