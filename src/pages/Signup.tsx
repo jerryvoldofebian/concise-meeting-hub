@@ -3,33 +3,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Signup() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { signUp, isLoading, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Here you would normally connect to Supabase for authentication
-    // For now we'll simulate a successful signup with a delay
-    toast({
-      title: "Signup Info",
-      description: "To set up authentication, please connect your project to Supabase",
-    });
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+    await signUp(email, password, firstName, lastName);
   };
 
   return (

@@ -3,31 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { signIn, isLoading, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Here you would normally connect to Supabase for authentication
-    // For now we'll simulate a successful login with a delay
-    toast({
-      title: "Login Info",
-      description: "To set up authentication, please connect your project to Supabase",
-    });
-    
-    setTimeout(() => {
-      setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+    await signIn(email, password);
   };
 
   return (
@@ -36,7 +30,7 @@ export default function Login() {
       <div className="flex flex-1 items-center justify-center py-12">
         <div className="mx-auto grid w-full max-w-md gap-6 px-4">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold">Login</h1>
+            <h1 className="text-3xl font-bold">Sign in to your account</h1>
             <p className="text-gray-500">Enter your credentials to access your account</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">

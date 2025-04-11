@@ -9,7 +9,219 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      app_settings: {
+        Row: {
+          company_logo: string | null
+          company_name: string
+          default_meeting_duration: number
+          email_notifications: boolean
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          company_logo?: string | null
+          company_name: string
+          default_meeting_duration?: number
+          email_notifications?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          company_logo?: string | null
+          company_name?: string
+          default_meeting_duration?: number
+          email_notifications?: boolean
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meeting_attendees: {
+        Row: {
+          id: string
+          is_optional: boolean
+          is_present: boolean
+          meeting_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_optional?: boolean
+          is_present?: boolean
+          meeting_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_optional?: boolean
+          is_present?: boolean
+          meeting_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendees_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          created_at: string
+          created_by: string
+          date: string
+          description: string | null
+          end_time: string
+          id: string
+          is_recurring: boolean
+          location: string | null
+          minutes: string | null
+          recurring_pattern: string | null
+          start_time: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date: string
+          description?: string | null
+          end_time: string
+          id?: string
+          is_recurring?: boolean
+          location?: string | null
+          minutes?: string | null
+          recurring_pattern?: string | null
+          start_time: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_recurring?: boolean
+          location?: string | null
+          minutes?: string | null
+          recurring_pattern?: string | null
+          start_time?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar: string | null
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          role: string
+        }
+        Insert: {
+          avatar?: string | null
+          created_at?: string
+          first_name: string
+          id: string
+          last_name: string
+          role?: string
+        }
+        Update: {
+          avatar?: string | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assignee_id: string
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          meeting_id: string | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          meeting_id?: string | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          meeting_id?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
