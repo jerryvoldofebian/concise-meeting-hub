@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { AppNavbar } from "@/components/layout/AppNavbar";
@@ -251,7 +250,6 @@ export default function Teams() {
     return name.charAt(0).toUpperCase();
   };
 
-  // Helper to format member count text
   const getMemberCountText = (count?: number) => {
     if (count === undefined) return "Loading...";
     return count === 1 ? "1 member" : `${count} members`;
