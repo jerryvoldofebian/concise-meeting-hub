@@ -69,7 +69,7 @@ export default function Teams() {
     setIsLoading(true);
     try {
       // Fetch teams the user is a member of
-      const { data: memberTeams, error: memberError } = await supabase
+      const { data: memberTeamsData, error: memberError } = await supabase
         .from('team_members')
         .select(`
           team_id,
@@ -87,11 +87,13 @@ export default function Teams() {
       if (memberError) throw memberError;
 
       // Format my teams
-      const formattedMyTeams = memberTeams.map(item => ({
-        ...item.teams,
-        is_member: true,
-        is_admin: item.is_admin
-      }));
+      const formattedMyTeams = memberTeamsData
+        .filter(item => item.teams) // Ensure teams data exists
+        .map(item => ({
+          ...item.teams,
+          is_member: true,
+          is_admin: item.is_admin
+        }));
 
       setMyTeams(formattedMyTeams);
 
@@ -118,7 +120,7 @@ export default function Teams() {
           
           return {
             teamId: team.id,
-            count: error ? 0 : count || 0
+            count: error ? 0 : (count || 0)
           };
         })
       );
